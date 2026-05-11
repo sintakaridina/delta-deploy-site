@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delta Deploy - SSH Desktop Deployment Manager for Windows</title>
+    <meta name="description" content="Delta Deploy is a Windows desktop deployment manager for SSH projects with local vs remote file comparison, selective deploy, env/config review, backup, rollback, and deployment history.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="googlebot" content="index, follow">
+    <meta name="application-name" content="Delta Deploy">
+    <meta name="keywords" content="SSH deployment tool, desktop deployment manager, Windows deployment app, selective deploy, FastAPI deployment, Paramiko SSH, file comparison deployment, rollback deployment">
+    <link rel="canonical" href="https://sintakaridina.github.io/delta-deploy-site/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Delta Deploy">
+    <meta property="og:title" content="Delta Deploy - SSH Desktop Deployment Manager for Windows">
+    <meta property="og:description" content="Review local and remote file changes, deploy selected files over SSH, manage env/config differences, and roll back from deployment history.">
+    <meta property="og:url" content="https://sintakaridina.github.io/delta-deploy-site/">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Delta Deploy - SSH Desktop Deployment Manager for Windows">
+    <meta name="twitter:description" content="A Windows desktop deployment manager for SSH projects with comparison, selective deploy, backup, rollback, and env/config review.">
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "Delta Deploy",
+            "applicationCategory": "DeveloperApplication",
+            "operatingSystem": "Windows",
+            "description": "Delta Deploy is a Windows desktop deployment manager for SSH projects with local vs remote file comparison, selective deployment, env/config review, backup, rollback, and deployment history.",
+            "url": "https://sintakaridina.github.io/delta-deploy-site/",
+            "downloadUrl": "https://github.com/sintakaridina/delta-deploy-site-site/releases/latest",
+            "codeRepository": "https://github.com/sintakaridina/delta-deploy-site",
+            "softwareVersion": "0.1.0",
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+            },
+            "author": {
+                "@type": "Person",
+                "name": "Sintakaridina"
+            }
+        }
+    </script>
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+                {
+                    "@type": "Question",
+                    "name": "What is Delta Deploy used for?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Delta Deploy is used to compare local project files with a remote server and deploy selected changes over SSH with backup and rollback support."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Does Delta Deploy support Windows?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "The public release currently targets Windows and is distributed as a ZIP package containing DeltaDeploy.exe."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Can it handle environment files?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Yes. Env-managed files can be reviewed in a dedicated comparison flow so server-specific configuration differences stay separate from normal modified files."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Where is project data stored?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Delta Deploy stores project and server metadata locally in a JSON file under the user's home directory."
+                    }
+                }
+            ]
+        }
+    </script>
+    <style>
+        :root {
+            --bg: #f4f7fb;
+            --surface: #ffffff;
+            --surface-soft: #eef3f8;
+            --line: #d7e1ed;
+            --text: #182436;
+            --muted: #5c6d81;
+            --primary: #0b63ce;
+            --primary-dark: #074a9d;
+            --success: #1f8f4e;
+            --warning: #b86e00;
+            --shadow: 0 18px 60px rgba(20, 35, 58, 0.16);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+            line-height: 1.5;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: rgba(255, 255, 255, 0.92);
+            border-bottom: 1px solid rgba(215, 225, 237, 0.85);
+            backdrop-filter: blur(14px);
+        }
+
+        .nav {
+            width: min(1180px, calc(100% - 40px));
+            margin: 0 auto;
+            min-height: 68px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 800;
+            letter-spacing: 0;
+        }
+
+        .brand-mark {
+            width: 34px;
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: #0f2238;
+            color: #ffffff;
+        }
+
+        .brand-mark svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            min-height: 42px;
+            padding: 0 18px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            font-weight: 800;
+            font-size: 14px;
+            white-space: nowrap;
+            transition: background 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+        }
+
+        .button:hover {
+            transform: translateY(-1px);
+        }
+
+        .button-primary {
+            color: #ffffff;
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .button-primary:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+
+        .button-secondary {
+            background: #ffffff;
+            color: var(--text);
+            border-color: #c9d6e4;
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+            flex: 0 0 auto;
+            stroke: currentColor;
+            stroke-width: 1.9;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+        }
+
+        .icon-sm {
+            width: 17px;
+            height: 17px;
+        }
+
+        .icon-box {
+            width: 42px;
+            height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: #edf5ff;
+            color: var(--primary);
+            margin-bottom: 18px;
+        }
+
+        .download-icon {
+            width: 48px;
+            height: 48px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: #0f2238;
+            color: #ffffff;
+            margin-bottom: 18px;
+        }
+
+        .hero {
+            position: relative;
+            overflow: hidden;
+            min-height: 720px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(90deg, rgba(244, 247, 251, 0.98) 0%, rgba(244, 247, 251, 0.9) 38%, rgba(244, 247, 251, 0.45) 100%),
+                linear-gradient(135deg, #edf3f9 0%, #f8fafc 58%, #dce8f5 100%);
+        }
+
+        .hero-shell {
+            position: absolute;
+            right: max(24px, calc((100vw - 1180px) / 2));
+            top: 122px;
+            width: min(720px, 54vw);
+            min-height: 470px;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            border-radius: 16px;
+            background: #ffffff;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .hero-window-bar {
+            height: 46px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 16px;
+            border-bottom: 1px solid #e3eaf3;
+            background: #f8fafc;
+        }
+
+        .window-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: #b8c5d3;
+        }
+
+        .window-title {
+            margin-left: 8px;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .app-preview {
+            display: grid;
+            grid-template-columns: 190px 148px 1fr;
+            min-height: 424px;
+        }
+
+        .preview-sidebar {
+            padding: 18px 14px;
+            border-right: 1px solid #e3eaf3;
+            background: #fbfdff;
+        }
+
+        .preview-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            color: #334155;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .pill {
+            border-radius: 999px;
+            background: #e8f1ff;
+            color: var(--primary);
+            padding: 2px 8px;
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .server-item {
+            padding: 10px;
+            border: 1px solid #d8e3ef;
+            border-radius: 8px;
+            background: #ffffff;
+            margin-bottom: 10px;
+        }
+
+        .server-item.active {
+            border-color: #90b8ec;
+            background: #f0f6ff;
+        }
+
+        .server-line {
+            height: 8px;
+            border-radius: 999px;
+            background: #c5d4e5;
+            margin-bottom: 7px;
+        }
+
+        .server-line.short {
+            width: 62%;
+        }
+
+        .project-chip {
+            height: 24px;
+            border-radius: 6px;
+            background: #ffffff;
+            border: 1px solid #d7e2ef;
+            margin-top: 8px;
+        }
+
+        .preview-menu {
+            padding: 14px;
+            border-right: 1px solid #e3eaf3;
+            background: #ffffff;
+        }
+
+        .menu-row {
+            height: 38px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: #f3f7fb;
+        }
+
+        .menu-row.active {
+            background: #e9f2ff;
+            border: 1px solid #c7dcfa;
+        }
+
+        .preview-main {
+            padding: 16px;
+            background: #ffffff;
+        }
+
+        .preview-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .preview-heading {
+            width: 180px;
+            height: 13px;
+            border-radius: 999px;
+            background: #9aacc1;
+        }
+
+        .preview-button {
+            width: 74px;
+            height: 30px;
+            border-radius: 7px;
+            background: var(--primary);
+        }
+
+        .metric-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .metric {
+            min-height: 76px;
+            border-radius: 8px;
+            border: 1px solid #dbe5f0;
+            background: #fafcff;
+            padding: 12px;
+        }
+
+        .metric strong {
+            display: block;
+            width: 54px;
+            height: 18px;
+            border-radius: 999px;
+            background: #2f3f53;
+            margin-top: 14px;
+        }
+
+        .compare-panel {
+            border: 1px solid #dbe5f0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #ffffff;
+        }
+
+        .compare-panel-head {
+            height: 34px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e4ebf3;
+        }
+
+        .file-line {
+            height: 42px;
+            display: grid;
+            grid-template-columns: 1fr 70px;
+            gap: 14px;
+            align-items: center;
+            padding: 0 12px;
+            border-bottom: 1px solid #eef2f7;
+        }
+
+        .file-line:last-child {
+            border-bottom: none;
+        }
+
+        .file-name {
+            height: 8px;
+            border-radius: 999px;
+            background: #bac8d8;
+        }
+
+        .file-status {
+            height: 20px;
+            border-radius: 999px;
+            background: #fff1d7;
+            border: 1px solid #efd3a5;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            width: min(1180px, calc(100% - 40px));
+            margin: 0 auto;
+            padding: 96px 0 70px;
+        }
+
+        .hero-copy {
+            max-width: 560px;
+        }
+
+        .eyebrow {
+            color: var(--primary);
+            font-size: 13px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            margin: 0;
+            color: var(--text);
+            font-size: clamp(44px, 7vw, 78px);
+            line-height: 0.98;
+            letter-spacing: 0;
+        }
+
+        .hero-copy p {
+            max-width: 520px;
+            margin: 22px 0 30px;
+            color: #405168;
+            font-size: 18px;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        .release-note {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .section {
+            padding: 88px 0;
+        }
+
+        .container {
+            width: min(1180px, calc(100% - 40px));
+            margin: 0 auto;
+        }
+
+        .section-title {
+            max-width: 700px;
+            margin-bottom: 34px;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: clamp(30px, 4vw, 46px);
+            line-height: 1.08;
+            letter-spacing: 0;
+        }
+
+        .section-title p {
+            margin: 14px 0 0;
+            color: var(--muted);
+            font-size: 17px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .feature-card {
+            min-height: 190px;
+            padding: 24px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--surface);
+        }
+
+        .feature-card:hover {
+            border-color: #b7cce4;
+            box-shadow: 0 12px 34px rgba(20, 35, 58, 0.08);
+        }
+
+        .feature-card h3 {
+            margin: 0 0 10px;
+            font-size: 18px;
+        }
+
+        .feature-card p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 15px;
+        }
+
+        .workflow {
+            display: grid;
+            grid-template-columns: 0.9fr 1.1fr;
+            gap: 28px;
+            align-items: start;
+        }
+
+        .steps {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--surface);
+            overflow: hidden;
+        }
+
+        .step {
+            display: grid;
+            grid-template-columns: 42px 1fr;
+            gap: 16px;
+            padding: 20px 22px;
+            border-bottom: 1px solid #e7edf4;
+        }
+
+        .step:last-child {
+            border-bottom: none;
+        }
+
+        .step-number {
+            width: 34px;
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: #eef5ff;
+            color: var(--primary);
+        }
+
+        .step h3 {
+            margin: 0 0 4px;
+            font-size: 17px;
+        }
+
+        .step p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 15px;
+        }
+
+        .download-panel {
+            padding: 34px;
+            border: 1px solid #c8d8ea;
+            border-radius: 10px;
+            background: #ffffff;
+            box-shadow: 0 12px 40px rgba(20, 35, 58, 0.08);
+        }
+
+        .download-panel h3 {
+            margin: 0 0 10px;
+            font-size: 24px;
+        }
+
+        .download-panel p {
+            margin: 0 0 22px;
+            color: var(--muted);
+        }
+
+        .download-meta {
+            display: grid;
+            gap: 10px;
+            margin-top: 22px;
+            padding-top: 22px;
+            border-top: 1px solid #e4ebf3;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .faq-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .faq-item {
+            padding: 24px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: #ffffff;
+        }
+
+        .faq-item h3 {
+            margin: 0 0 10px;
+            font-size: 18px;
+        }
+
+        .faq-item p {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .tech {
+            background: #111d2d;
+            color: #ffffff;
+        }
+
+        .tech .section-title p {
+            color: #b8c5d4;
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .tech-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.06);
+            color: #d7e2ef;
+            font-weight: 800;
+        }
+
+        .tech-item .icon {
+            color: #8bbcff;
+        }
+
+        .site-footer {
+            border-top: 1px solid var(--line);
+            padding: 28px 0;
+            background: #ffffff;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .footer-row {
+            width: min(1180px, calc(100% - 40px));
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .footer-row a {
+            color: var(--primary);
+            font-weight: 800;
+        }
+
+        @media (max-width: 980px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero {
+                min-height: auto;
+                display: block;
+                padding-bottom: 36px;
+            }
+
+            .hero::before {
+                background: linear-gradient(180deg, rgba(244, 247, 251, 1) 0%, rgba(244, 247, 251, 0.92) 100%);
+            }
+
+            .hero-shell {
+                position: relative;
+                right: auto;
+                top: auto;
+                width: min(100% - 40px, 720px);
+                margin: 20px auto 0;
+            }
+
+            .hero-content {
+                padding: 68px 0 20px;
+            }
+
+            .feature-grid,
+            .workflow,
+            .tech-grid,
+            .faq-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .app-preview {
+                grid-template-columns: 120px 1fr;
+            }
+
+            .preview-menu {
+                display: none;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .nav {
+                width: calc(100% - 28px);
+            }
+
+            .container,
+            .hero-content,
+            .footer-row {
+                width: calc(100% - 28px);
+            }
+
+            .hero-actions,
+            .footer-row {
+                flex-direction: column;
+            }
+
+            .button {
+                width: 100%;
+            }
+
+            .hero-shell {
+                display: none;
+            }
+
+            .section {
+                padding: 64px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+        <symbol id="icon-boxes" viewBox="0 0 24 24">
+            <path d="M4 7.5 12 3l8 4.5-8 4.5-8-4.5Z"></path>
+            <path d="M4 7.5V16l8 5 8-5V7.5"></path>
+            <path d="M12 12v9"></path>
+        </symbol>
+        <symbol id="icon-download" viewBox="0 0 24 24">
+            <path d="M12 3v12"></path>
+            <path d="m7 10 5 5 5-5"></path>
+            <path d="M5 20h14"></path>
+        </symbol>
+        <symbol id="icon-server" viewBox="0 0 24 24">
+            <rect x="4" y="4" width="16" height="6" rx="2"></rect>
+            <rect x="4" y="14" width="16" height="6" rx="2"></rect>
+            <path d="M8 7h.01"></path>
+            <path d="M8 17h.01"></path>
+        </symbol>
+        <symbol id="icon-compare" viewBox="0 0 24 24">
+            <path d="M8 7h11"></path>
+            <path d="m16 4 3 3-3 3"></path>
+            <path d="M16 17H5"></path>
+            <path d="m8 14-3 3 3 3"></path>
+        </symbol>
+        <symbol id="icon-upload" viewBox="0 0 24 24">
+            <path d="M12 21V9"></path>
+            <path d="m7 14 5-5 5 5"></path>
+            <path d="M5 5h14"></path>
+        </symbol>
+        <symbol id="icon-key" viewBox="0 0 24 24">
+            <circle cx="8" cy="15" r="4"></circle>
+            <path d="m11 12 9-9"></path>
+            <path d="m15 4 3 3"></path>
+            <path d="m17 2 3 3"></path>
+        </symbol>
+        <symbol id="icon-rollback" viewBox="0 0 24 24">
+            <path d="M3 7v6h6"></path>
+            <path d="M3.5 13A8.5 8.5 0 1 0 6 7"></path>
+            <path d="M12 8v5l3 2"></path>
+        </symbol>
+        <symbol id="icon-database" viewBox="0 0 24 24">
+            <ellipse cx="12" cy="5" rx="8" ry="3"></ellipse>
+            <path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"></path>
+            <path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"></path>
+        </symbol>
+        <symbol id="icon-plug" viewBox="0 0 24 24">
+            <path d="M8 2v6"></path>
+            <path d="M16 2v6"></path>
+            <path d="M6 8h12v4a6 6 0 0 1-12 0V8Z"></path>
+            <path d="M12 18v4"></path>
+        </symbol>
+        <symbol id="icon-settings" viewBox="0 0 24 24">
+            <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"></path>
+            <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 0 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1A2 2 0 0 1 4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.3 7A2 2 0 0 1 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1A2 2 0 0 1 19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.1a2 2 0 0 1 0 4H21a1.7 1.7 0 0 0-1.6 1Z"></path>
+        </symbol>
+        <symbol id="icon-checklist" viewBox="0 0 24 24">
+            <path d="M9 6h11"></path>
+            <path d="M9 12h11"></path>
+            <path d="M9 18h11"></path>
+            <path d="m3.5 6 1 1 2-2"></path>
+            <path d="m3.5 12 1 1 2-2"></path>
+            <path d="m3.5 18 1 1 2-2"></path>
+        </symbol>
+        <symbol id="icon-rocket" viewBox="0 0 24 24">
+            <path d="M14 4c3.4 0 5.5.9 6 1.4-.3 2.8-1.6 5.4-3.8 7.6l-4.8 4.8-5.2-5.2L11 7.8A10.6 10.6 0 0 1 14 4Z"></path>
+            <path d="M6 13 4 20l7-2"></path>
+            <path d="M15 9h.01"></path>
+        </symbol>
+        <symbol id="icon-code" viewBox="0 0 24 24">
+            <path d="m8 9-4 3 4 3"></path>
+            <path d="m16 9 4 3-4 3"></path>
+            <path d="m14 5-4 14"></path>
+        </symbol>
+        <symbol id="icon-window" viewBox="0 0 24 24">
+            <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+            <path d="M3 9h18"></path>
+            <path d="M8 4v5"></path>
+        </symbol>
+        <symbol id="icon-package" viewBox="0 0 24 24">
+            <path d="M21 8.5 12 3 3 8.5v7L12 21l9-5.5v-7Z"></path>
+            <path d="m3 8.5 9 5.5 9-5.5"></path>
+            <path d="M12 14v7"></path>
+        </symbol>
+    </svg>
+    <header class="site-header">
+        <nav class="nav" aria-label="Main navigation">
+            <a class="brand" href="#">
+                <span class="brand-mark"><svg class="icon" aria-hidden="true"><use href="#icon-boxes"></use></svg></span>
+                <span>Delta Deploy</span>
+            </a>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#workflow">Workflow</a>
+                <a href="#download">Download</a>
+                <a href="https://github.com/sintakaridina/delta-deploy-site">GitHub</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="hero-shell" aria-hidden="true">
+                <div class="hero-window-bar">
+                    <span class="window-dot"></span>
+                    <span class="window-dot"></span>
+                    <span class="window-dot"></span>
+                    <span class="window-title">Delta Deploy Workspace</span>
+                </div>
+                <div class="app-preview">
+                    <aside class="preview-sidebar">
+                        <div class="preview-title">Servers <span class="pill">2</span></div>
+                        <div class="server-item active">
+                            <div class="server-line"></div>
+                            <div class="server-line short"></div>
+                            <div class="project-chip"></div>
+                        </div>
+                        <div class="server-item">
+                            <div class="server-line"></div>
+                            <div class="server-line short"></div>
+                        </div>
+                    </aside>
+                    <aside class="preview-menu">
+                        <div class="menu-row active"></div>
+                        <div class="menu-row"></div>
+                        <div class="menu-row"></div>
+                    </aside>
+                    <section class="preview-main">
+                        <div class="preview-head">
+                            <div class="preview-heading"></div>
+                            <div class="preview-button"></div>
+                        </div>
+                        <div class="metric-row">
+                            <div class="metric"><strong></strong></div>
+                            <div class="metric"><strong></strong></div>
+                            <div class="metric"><strong></strong></div>
+                        </div>
+                        <div class="compare-panel">
+                            <div class="compare-panel-head"></div>
+                            <div class="file-line">
+                                <div class="file-name"></div>
+                                <div class="file-status"></div>
+                            </div>
+                            <div class="file-line">
+                                <div class="file-name"></div>
+                                <div class="file-status"></div>
+                            </div>
+                            <div class="file-line">
+                                <div class="file-name"></div>
+                                <div class="file-status"></div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <div class="hero-content">
+                <div class="hero-copy">
+                    <div class="eyebrow">Windows desktop deployment manager</div>
+                    <h1>Review, deploy, and roll back with confidence.</h1>
+                    <p>Delta Deploy gives SSH-based projects a focused deployment workspace with file comparison, selective sync, env/config review, backup, and deployment history.</p>
+                    <div class="hero-actions">
+                        <a class="button button-primary" href="https://github.com/sintakaridina/delta-deploy-site-site/releases/latest"><svg class="icon icon-sm" aria-hidden="true"><use href="#icon-download"></use></svg>Download for Windows</a>
+                        <a class="button button-secondary" href="https://github.com/sintakaridina/delta-deploy-site"><svg class="icon icon-sm" aria-hidden="true"><use href="#icon-code"></use></svg>View Source</a>
+                    </div>
+                    <div class="release-note">Current public package target: Windows. Additional platforms can be packaged from source.</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="features">
+            <div class="container">
+                <div class="section-title">
+                    <h2>Built for controlled deployments</h2>
+                    <p>Keep deployment decisions visible before files are sent to the server.</p>
+                </div>
+                <div class="feature-grid">
+                    <article class="feature-card">
+                        <div class="icon-box"><svg class="icon" aria-hidden="true"><use href="#icon-server"></use></svg></div>
+                        <h3>SSH Server Management</h3>
+                        <p>Save server connections, connect on demand, and group projects under the server they deploy to.</p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="icon-box"><svg class="icon" aria-hidden="true"><use href="#icon-compare"></use></svg></div>
+                        <h3>File Comparison</h3>
+                        <p>Compare local and remote project files before deploy, including new, modified, and deleted files.</p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="icon-box"><svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg></div>
+                        <h3>Selective Deploy</h3>
+                        <p>Choose exactly which detected changes should be deployed and leave the rest untouched.</p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="icon-box"><svg class="icon" aria-hidden="true"><use href="#icon-key"></use></svg></div>
+                        <h3>Env/Config Review</h3>
+                        <p>Track env-managed files with a dedicated comparison flow so configuration differences stay clear.</p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="icon-box"><svg class="icon" aria-hidden="true"><use href="#icon-rollback"></use></svg></div>
+                        <h3>Backup and Rollback</h3>
+                        <p>Create local backups before deployment and restore from previous deployment records when needed.</p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="icon-box"><svg class="icon" aria-hidden="true"><use href="#icon-database"></use></svg></div>
+                        <h3>Local Storage</h3>
+                        <p>Keep project, server, and deployment metadata locally without requiring a separate database service.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="workflow">
+            <div class="container workflow">
+                <div class="section-title">
+                    <h2>A practical deploy flow for SSH projects</h2>
+                    <p>Delta Deploy keeps setup, review, deployment, and rollback in one workspace.</p>
+                </div>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number"><svg class="icon icon-sm" aria-hidden="true"><use href="#icon-plug"></use></svg></div>
+                        <div>
+                            <h3>Connect</h3>
+                            <p>Add an SSH server and connect when you are ready to work with it.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number"><svg class="icon icon-sm" aria-hidden="true"><use href="#icon-settings"></use></svg></div>
+                        <div>
+                            <h3>Configure</h3>
+                            <p>Create a project with local and remote paths, exclusions, and env-managed files.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number"><svg class="icon icon-sm" aria-hidden="true"><use href="#icon-checklist"></use></svg></div>
+                        <div>
+                            <h3>Review</h3>
+                            <p>Refresh the comparison and inspect the changes before uploading or deleting files.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number"><svg class="icon icon-sm" aria-hidden="true"><use href="#icon-rocket"></use></svg></div>
+                        <div>
+                            <h3>Deploy</h3>
+                            <p>Deploy selected files, keep history, and roll back from backups when required.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="download">
+            <div class="container workflow">
+                <div class="download-panel">
+                    <div class="download-icon"><svg class="icon" aria-hidden="true"><use href="#icon-download"></use></svg></div>
+                    <h3>Download Delta Deploy for Windows</h3>
+                    <p>Get the latest packaged build from GitHub Releases.</p>
+                    <a class="button button-primary" href="https://github.com/sintakaridina/delta-deploy-site-site/releases/latest"><svg class="icon icon-sm" aria-hidden="true"><use href="#icon-package"></use></svg>Download Windows Release</a>
+                    <div class="download-meta">
+                        <span>Package format: ZIP release containing `DeltaDeploy.exe`</span>
+                        <span>Source repository: github.com/sintakaridina/delta-deploy</span>
+                    </div>
+                </div>
+                <div class="section-title">
+                    <h2>Prefer building from source?</h2>
+                    <p>Clone the repository, install dependencies, and run the PyInstaller build script to generate the Windows executable.</p>
+                    <div class="hero-actions">
+                        <a class="button button-secondary" href="https://github.com/sintakaridina/delta-deploy-site-site#build-from-source"><svg class="icon icon-sm" aria-hidden="true"><use href="#icon-code"></use></svg>Build Instructions</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="faq">
+            <div class="container">
+                <div class="section-title">
+                    <h2>Frequently asked questions</h2>
+                    <p>Common details about using Delta Deploy for SSH-based project deployments.</p>
+                </div>
+                <div class="faq-grid">
+                    <article class="faq-item">
+                        <h3>What is Delta Deploy used for?</h3>
+                        <p>Delta Deploy is used to compare local project files with a remote server and deploy selected changes over SSH with backup and rollback support.</p>
+                    </article>
+                    <article class="faq-item">
+                        <h3>Does Delta Deploy support Windows?</h3>
+                        <p>The public release currently targets Windows and is distributed as a ZIP package containing `DeltaDeploy.exe`.</p>
+                    </article>
+                    <article class="faq-item">
+                        <h3>Can it handle environment files?</h3>
+                        <p>Yes. Env-managed files can be reviewed in a dedicated comparison flow so server-specific configuration differences stay separate from normal modified files.</p>
+                    </article>
+                    <article class="faq-item">
+                        <h3>Where is project data stored?</h3>
+                        <p>Delta Deploy stores project and server metadata locally in a JSON file under the user's home directory.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="section tech">
+            <div class="container">
+                <div class="section-title">
+                    <h2>Technology</h2>
+                    <p>A lightweight desktop shell around a FastAPI-based deployment backend and a focused web UI.</p>
+                </div>
+                <div class="tech-grid">
+                    <div class="tech-item"><svg class="icon" aria-hidden="true"><use href="#icon-server"></use></svg>FastAPI</div>
+                    <div class="tech-item"><svg class="icon" aria-hidden="true"><use href="#icon-key"></use></svg>Paramiko SSH</div>
+                    <div class="tech-item"><svg class="icon" aria-hidden="true"><use href="#icon-window"></use></svg>pywebview</div>
+                    <div class="tech-item"><svg class="icon" aria-hidden="true"><use href="#icon-package"></use></svg>PyInstaller</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-row">
+            <span>Delta Deploy</span>
+            <a href="https://github.com/sintakaridina/delta-deploy-site">GitHub Repository</a>
+        </div>
+    </footer>
+</body>
+</html>
