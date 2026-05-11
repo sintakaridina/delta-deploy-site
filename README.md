@@ -25,7 +25,7 @@ https://sintakaridina.github.io/delta-deploy-site/
 Download the latest Windows release from:
 
 ```text
-https://github.com/sintakaridina/delta-deploy/releases
+https://github.com/sintakaridina/delta-deploy-site/releases
 ```
 
 Then:
