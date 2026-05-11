@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://sintakaridina.github.io/delta-deploy-site/sitemap.xml
+Sitemap: https://delta-deploy.sintalabs.cloud/sitemap.xml
