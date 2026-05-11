@@ -30,9 +30,9 @@ https://github.com/sintakaridina/delta-deploy-site/releases
 
 Then:
 
-1. Download the Windows ZIP package.
-2. Extract the ZIP.
-3. Run `DeltaDeploy.exe`.
+1. Download the Windows installer.
+2. Run `DeltaDeploySetup-vX.Y.Z.exe`.
+3. Launch Delta Deploy from the Start Menu or desktop shortcut.
 
 ## Basic Workflow
 
@@ -87,11 +87,14 @@ Or run PyInstaller directly:
 pyinstaller delta_deploy.spec
 ```
 
-Build output:
+Build outputs:
 
 ```text
 dist/DeltaDeploy.exe
+release/DeltaDeploySetup-v0.1.0.exe
 ```
+
+The installer is generated with Inno Setup. If Inno Setup is not installed, `build.bat` still creates `dist/DeltaDeploy.exe` and skips the installer step.
 
 If the executable is locked during rebuild, close the app or run:
 
@@ -99,15 +102,15 @@ If the executable is locked during rebuild, close the app or run:
 Stop-Process -Name DeltaDeploy -Force
 ```
 
-## Create a Release ZIP
+## Create a Release Package
 
-After building:
+Preferred release asset:
 
-```powershell
-Compress-Archive -Path dist\DeltaDeploy.exe, README.md, QUICKSTART.md -DestinationPath DeltaDeploy-windows.zip -Force
+```text
+release/DeltaDeploySetup-v0.1.0.exe
 ```
 
-Upload the ZIP file to GitHub Releases.
+Upload the installer to GitHub Releases.
 
 ## Project Structure
 
@@ -122,6 +125,7 @@ automation-deploy/
 ├── frontend/
 ├── build.bat
 ├── delta_deploy.spec
+├── installer/
 ├── launcher.py
 ├── requirements.txt
 ├── QUICKSTART.md

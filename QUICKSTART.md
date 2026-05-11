@@ -4,10 +4,10 @@
 
 1. Buka:
    `https://github.com/sintakaridina/delta-deploy/releases`
-2. Download ZIP Windows terbaru.
-3. Extract ZIP.
-4. Double-click:
-   `DeltaDeploy.exe`
+2. Download installer Windows terbaru.
+3. Run:
+   `DeltaDeploySetup-vX.Y.Z.exe`
+4. Launch Delta Deploy from Windows Search, Start Menu, or the desktop shortcut.
 
 App akan terbuka sebagai window desktop. Tidak perlu install Python dan tidak perlu membuka browser manual.
 
@@ -46,7 +46,10 @@ Output:
 
 ```text
 dist/DeltaDeploy.exe
+release/DeltaDeploySetup-v0.1.0.exe
 ```
+
+Installer build membutuhkan Inno Setup 6. Jika Inno Setup belum tersedia, `build.bat` tetap menghasilkan `dist/DeltaDeploy.exe`.
 
 Jika build gagal karena file terkunci, tutup app atau jalankan:
 
@@ -56,13 +59,13 @@ Stop-Process -Name DeltaDeploy -Force
 
 Lalu ulangi build.
 
-## Buat ZIP untuk Dibagikan
+## Release untuk Dibagikan
 
-```powershell
-Compress-Archive -Path dist\DeltaDeploy.exe, README.md, QUICKSTART.md -DestinationPath DeltaDeploy-windows.zip -Force
+```text
+release/DeltaDeploySetup-v0.1.0.exe
 ```
 
-Upload ZIP ke GitHub Releases supaya user bisa download langsung.
+Upload installer ke GitHub Releases supaya user bisa download langsung.
 
 ## Data Lokal
 
